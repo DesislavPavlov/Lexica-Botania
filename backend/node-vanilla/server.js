@@ -8,7 +8,7 @@ const sharp = require('sharp');
 const Flower = require(`${__dirname}/models/Flower`);
 
 
-
+const PORT = process.env.PORT || 4000;
 const FLOWER_DATA_PATH = path.join(__dirname, 'data', 'flowers.json');
 const FLOWER_SUGGESTIONS_DATA_PATH = path.join(__dirname, 'data', 'flower-suggestions.json');
 const FLOWER_IMAGES_PATH = path.join(__dirname, 'public', 'flowers');
@@ -543,8 +543,8 @@ const server = http.createServer((req, res) => {
     }
 });
 
-server.listen(8000, '127.0.0.1', () => {
-    console.log('Listening on localhost:8000...');
+server.listen(PORT, '0.0.0.0', () => {
+    console.log('Server listening...');
 })
 
 
