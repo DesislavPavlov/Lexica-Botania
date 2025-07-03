@@ -1,0 +1,20 @@
+{
+  "name": "vanilla",
+  "version": "1.0.0",
+  "description": "Vanilla nodejs backend for Lexica Botania",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "sharp": "^0.34.2",
+    "uuid": "^11.1.0"
+  }
+}
