@@ -46,7 +46,7 @@ const server = http.createServer((req, res) => {
         return res.end('Image not found');
       }
 
-      res.writeHead(200, { 'Content-Type': 'image/png' }); // Or detect by file extension
+      res.writeHead(200, { 'Content-Type': 'image/webp' });
       res.end(data);
     });
   } else if (req.method === 'GET' && req.url === '/api/flowers') {
