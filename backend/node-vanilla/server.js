@@ -37,6 +37,13 @@ function saveAsWebp(fileStream, outputPath) {
 const server = http.createServer((req, res) => {
   console.log(req.url);
 
+  res.setHeader('Access-Control-Allow-Origin', '*'); // TODO: Change to domain name
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, OPTIONS'
+  );
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'GET' && req.url.startsWith('/flowers/')) {
     const imagePath = path.join(staticFolder, req.url);
 
