@@ -3,38 +3,15 @@ const url = require('url');
 const fs = require('fs');
 const path = require('path');
 const busboy = require('busboy');
-const sharp = require('sharp');
+const supabaseService = require(`${__dirname}/services/supabaseService`);
 
 const Flower = require(`${__dirname}/models/Flower`);
 
-const PORT = process.env.PORT || 4000;
-const FLOWER_DATA_PATH = path.join(__dirname, 'data', 'flowers.json');
-const FLOWER_SUGGESTIONS_DATA_PATH = path.join(
-  __dirname,
-  'data',
-  'flower-suggestions.json'
-);
-const FLOWER_IMAGES_PATH = path.join(__dirname, 'public', 'flowers');
-const staticFolder = path.join(__dirname, 'public');
+const PORT = process.env.PORT || 8000;
 
 let imageToWebpPromise = null;
 
-function saveAsWebp(fileStream, outputPath) {
-  return new Promise((resolve, reject) => {
-    const transformer = sharp().webp();
-    const saveTo = fs.createWriteStream(outputPath);
-
-    fileStream.pipe(transformer).pipe(saveTo);
-
-    fileStream.on('error', (err) => reject);
-    transformer.on('error', (err) => reject);
-    saveTo.on('error', (err) => reject);
-
-    saveTo.on('finish', () => resolve(outputPath));
-  });
-}
-
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   console.log(req.url);
 
   res.setHeader('Access-Control-Allow-Origin', '*'); // TODO: Change to domain name
@@ -44,56 +21,40 @@ const server = http.createServer((req, res) => {
   );
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'GET' && req.url.startsWith('/flowers/')) {
-    const imagePath = path.join(staticFolder, req.url);
-
-    fs.readFile(imagePath, (err, data) => {
-      if (err) {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        return res.end('Image not found');
-      }
-
-      res.writeHead(200, { 'Content-Type': 'image/webp' });
-      res.end(data);
-    });
-  } else if (req.method === 'GET' && req.url === '/api/flowers') {
-    fs.readFile(FLOWER_DATA_PATH, 'utf-8', (err, data) => {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          console.error('ERROR! File not found: ', err);
-          res.writeHead(404, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, file could not be found.');
-        } else {
-          console.error('ERROR! Error occured while reading file: ', err);
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, Internal Server Error.');
-        }
-      }
-
-      res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(data);
-    });
+  if (req.method === 'GET' && req.url === '/api/flowers') {
+    const flowers = await supabaseService.getFlowers();
+    const flowersJson = JSON.stringify(flowers);
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(flowersJson);
   } else if (req.method === 'POST' && req.url === '/api/flowers') {
     let nameBg = '';
     let nameEng = '';
+    let nameLatin = '';
     let filepath = '';
 
+    // Set up busboy
     const bb = busboy({ headers: req.headers });
+
+    // Text fields
     bb.on('field', (name, val, info) => {
       if (name === 'nameBg') {
         nameBg = val;
       } else if (name === 'nameEng') {
         nameEng = val;
+      } else if (name === 'nameLatin') {
+        nameLatin = val;
       }
     });
+
+    // Files
     bb.on('file', (name, file, info) => {
       const fileName = `${new Date().toJSON().slice(0, 10)}-${Date.now()}-${
         info.filename.split('.')[0]
       }.webp`;
-      const filePath = path.join(FLOWER_IMAGES_PATH, fileName);
-      imageToWebpPromise = saveAsWebp(file, filePath);
+      imageToWebpPromise = supabaseService.saveImage(file, fileName);
     });
 
+    // Busboy finish, save data to supabase
     bb.on('finish', async () => {
       if (imageToWebpPromise) {
         try {
@@ -107,107 +68,61 @@ const server = http.createServer((req, res) => {
         }
       }
 
-      if (!nameBg || !nameEng || !filepath) {
+      if (!nameBg || !nameEng || !nameLatin || !filepath) {
         console.error('ERROR! Missing flower information!');
         res.writeHead(400, { 'content-type': 'text/plain' });
         return res.end('Missing one or more properties of flower object.');
       }
 
-      const newFlower = new Flower(nameBg, nameEng, filepath);
-
-      fs.readFile(FLOWER_DATA_PATH, 'utf-8', (err, data) => {
-        if (res.writableEnded) {
-          return;
-        }
-
-        if (err) {
-          if (err.code === 'ENOENT') {
-            console.error('ERROR! File not found: ', err);
-            res.writeHead(404, { 'content-type': 'text/plain' });
-            return res.end('Error reading file, file could not be found.');
-          } else {
-            console.error('ERROR! Error occured while reading file: ', err);
-            res.writeHead(500, { 'content-type': 'text/plain' });
-            return res.end('Error reading file, Internal Server Error.');
-          }
-        }
-
-        let flowers = [];
-
-        try {
-          flowers = JSON.parse(data);
-        } catch (error) {
-          console.error(
-            'ERROR! Error occured while parsing flowers data: ',
-            error
-          );
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error parsing flower data.');
-        }
-
-        flowers.push(newFlower);
-        const flowersJson = JSON.stringify(flowers, null, 2);
-
-        fs.writeFile(FLOWER_DATA_PATH, flowersJson, 'utf-8', (err) => {
-          if (err) {
-            if (err.code === 'ENOENT') {
-              console.error('ERROR! File not found: ', err);
-              res.writeHead(404, { 'content-type': 'text/plain' });
-              return res.end('Error reading file, file could not be found.');
-            } else {
-              console.error('ERROR! Error occured while reading file: ', err);
-              res.writeHead(500, { 'content-type': 'text/plain' });
-              return res.end('Error reading file, Internal Server Error.');
-            }
-          }
-
-          console.log('Flowers written');
-          res.writeHead(201, { 'content-type': 'text/plain' });
-          res.end('Successfully stored flower');
-        });
-      });
-    });
-
-    req.pipe(bb);
-  } else if (req.method === 'GET' && req.url === '/api/flower-suggestions') {
-    fs.readFile(FLOWER_SUGGESTIONS_DATA_PATH, 'utf-8', (err, data) => {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          console.error('ERROR! File not found: ', err);
-          res.writeHead(404, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, file could not be found.');
-        } else {
-          console.error('ERROR! Error occured while reading file: ', err);
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, Internal Server Error.');
-        }
+      const newFlower = new Flower(nameBg, nameEng, nameLatin, filepath);
+      const savedId = await supabaseService.saveFlower(newFlower);
+      if (!savedId) {
+        console.error('ERROR! Unexpected error ocurred while saving flower!');
+        res.writeHead(500, { 'content-type': 'text/plain' });
+        res.end('Could not save flower, unexpected error ocurred');
       }
 
-      res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(data);
+      console.log('New flower successfully saved!');
+      res.writeHead(201, { 'content-type': 'text/plain' });
+      res.end('Successfully stored flower');
     });
+
+    // Pipe through busboy
+    req.pipe(bb);
+  } else if (req.method === 'GET' && req.url === '/api/flower-suggestions') {
+    const suggestions = await supabaseService.getSuggestions();
+    const suggestionsJson = JSON.stringify(suggestions);
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(suggestionsJson);
   } else if (req.method === 'POST' && req.url === '/api/flower-suggestions') {
     let nameBg = '';
     let nameEng = '';
+    let nameLatin = '';
     let filepath = '';
 
+    // Set up busboy
     const bb = busboy({ headers: req.headers });
+
+    // Text fields
     bb.on('field', (name, val) => {
       if (name === 'nameBg') {
         nameBg = val;
       } else if (name === 'nameEng') {
         nameEng = val;
+      } else if (name === 'nameLatin') {
+        nameLatin = val;
       }
     });
 
+    // Files
     bb.on('file', (name, file, info) => {
       const fileName = `${new Date().toJSON().slice(0, 10)}-${Date.now()}-${
         info.filename.split('.')[0]
       }.webp`;
-      const filePath = path.join(FLOWER_IMAGES_PATH, fileName);
-      imageToWebpPromise = saveAsWebp(file, filePath);
+      imageToWebpPromise = supabaseService.saveImage(file, fileName);
     });
 
+    // Finish
     bb.on('finish', async () => {
       if (imageToWebpPromise) {
         try {
@@ -221,72 +136,28 @@ const server = http.createServer((req, res) => {
         }
       }
 
-      if (!nameBg || !nameEng || !filepath) {
+      if (!nameBg || !nameEng || !nameLatin || !filepath) {
         console.error('ERROR! Missing flower information!');
         res.writeHead(400, { 'content-type': 'text/plain' });
         return res.end('Missing one or more properties of flower object.');
       }
 
-      const newFlower = new Flower(nameBg, nameEng, filepath);
-
-      fs.readFile(FLOWER_SUGGESTIONS_DATA_PATH, 'utf-8', (err, data) => {
-        if (res.writableEnded) {
-          return;
-        }
-
-        if (err) {
-          if (err.code === 'ENOENT') {
-            console.error('ERROR! File not found: ', err);
-            res.writeHead(404, { 'content-type': 'text/plain' });
-            return res.end('Error reading file, file could not be found.');
-          } else {
-            console.error('ERROR! Error occured while reading file: ', err);
-            res.writeHead(500, { 'content-type': 'text/plain' });
-            return res.end('Error reading file, Internal Server Error.');
-          }
-        }
-
-        let flowers = [];
-
-        try {
-          flowers = JSON.parse(data);
-        } catch (error) {
-          console.error(
-            'ERROR! Error occured while parsing flowers data: ',
-            error
-          );
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error parsing flower data.');
-        }
-
-        flowers.push(newFlower);
-        const flowersJson = JSON.stringify(flowers, null, 2);
-
-        fs.writeFile(
-          FLOWER_SUGGESTIONS_DATA_PATH,
-          flowersJson,
-          'utf-8',
-          (err) => {
-            if (err) {
-              if (err.code === 'ENOENT') {
-                console.error('ERROR! File not found: ', err);
-                res.writeHead(404, { 'content-type': 'text/plain' });
-                return res.end('Error reading file, file could not be found.');
-              } else {
-                console.error('ERROR! Error occured while reading file: ', err);
-                res.writeHead(500, { 'content-type': 'text/plain' });
-                return res.end('Error reading file, Internal Server Error.');
-              }
-            }
-
-            console.log('Flower suggestion written');
-            res.writeHead(201, { 'content-type': 'text/plain' });
-            res.end('Successfully stored flower suggestion');
-          }
+      const newSuggestion = new Flower(nameBg, nameEng, nameLatin, filepath);
+      const savedId = await supabaseService.saveSuggestion(newSuggestion);
+      if (!savedId) {
+        console.error(
+          'ERROR! Unexpected error ocurred while saving suggestion!'
         );
-      });
+        res.writeHead(500, { 'content-type': 'text/plain' });
+        res.end('Could not save flower suggestion, unexpected error ocurred');
+      }
+
+      console.log('Flower suggestion successfully saved!');
+      res.writeHead(201, { 'content-type': 'text/plain' });
+      res.end('Successfully stored flower suggestion');
     });
 
+    // Pipe through busboy
     req.pipe(bb);
   } else if (
     (req.method === 'PUT' || req.method === 'PATCH') &&
@@ -299,121 +170,39 @@ const server = http.createServer((req, res) => {
       return res.end('No id parameter in url query');
     }
 
-    let flowers = [];
-    let suggestions = [];
+    const suggestion = await supabaseService.getSuggestion(id);
+    if (!suggestion) {
+      console.error('ERROR! Could not find suggestion in DB with id: ', id);
+      res.writeHead(400, { 'content-type': 'text/plain' });
+      return res.end('Could not find suggestion with id: ', id);
+    }
 
-    // Get flowers
-    fs.readFile(FLOWER_DATA_PATH, 'utf-8', (err, data) => {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          console.error('ERROR! File not found: ', err);
-          res.writeHead(404, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, file could not be found.');
-        } else {
-          console.error('ERROR! Error occured while reading file: ', err);
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, Internal Server Error.');
-        }
-      }
+    if (!(await supabaseService.deleteSuggestion(id))) {
+      res.writeHead(500, { 'content-type': 'text/plain' });
+      return res.end('Could not delete flower suggestion record form DB');
+    }
 
-      try {
-        flowers = JSON.parse(data);
-      } catch (error) {
-        console.error(
-          'ERROR! Error occured while parsing flowers data: ',
-          error
-        );
-        res.writeHead(500, { 'content-type': 'text/plain' });
-        return res.end('Error parsing flower data.');
-      }
+    const newFlower = new Flower(
+      suggestion.name_bg,
+      suggestion.name_eng,
+      suggestion.name_latin,
+      suggestion.image_url
+    );
 
-      // Get suggestions
-      fs.readFile(FLOWER_SUGGESTIONS_DATA_PATH, 'utf-8', (err, data) => {
-        if (err) {
-          if (err.code === 'ENOENT') {
-            console.error('ERROR! File not found: ', err);
-            res.writeHead(404, { 'content-type': 'text/plain' });
-            return res.end('Error reading file, file could not be found.');
-          } else {
-            console.error('ERROR! Error occured while reading file: ', err);
-            res.writeHead(500, { 'content-type': 'text/plain' });
-            return res.end('Error reading file, Internal Server Error.');
-          }
-        }
+    const savedId = await supabaseService.saveFlower(newFlower);
+    if (!savedId) {
+      console.error(
+        'ERROR! Unexpected error ocurred while approving suggested flower!'
+      );
+      res.writeHead(500, { 'content-type': 'text/plain' });
+      res.end('Could not approve flower suggestion, unexpected error ocurred');
+    }
 
-        try {
-          suggestions = JSON.parse(data);
-        } catch (error) {
-          console.error(
-            'ERROR! Error occured while parsing flowers data: ',
-            error
-          );
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error parsing flower data.');
-        }
-
-        // Find approved flower & add it
-        const flower = suggestions.find((el) => el.id === id);
-        if (!flower) {
-          res.writeHead(400, { 'content-type': 'text/plain' });
-          return res.end(`No flower with id ${id} exists`);
-        }
-
-        flowers.push(flower);
-        const flowersJson = JSON.stringify(flowers, null, 2);
-
-        // Save new flower data
-        fs.writeFile(FLOWER_DATA_PATH, flowersJson, 'utf-8', (err) => {
-          if (err) {
-            if (err.code === 'ENOENT') {
-              console.error('ERROR! File not found: ', err);
-              res.writeHead(404, { 'content-type': 'text/plain' });
-              return res.end('Error reading file, file could not be found.');
-            } else {
-              console.error('ERROR! Error occured while reading file: ', err);
-              res.writeHead(500, { 'content-type': 'text/plain' });
-              return res.end('Error reading file, Internal Server Error.');
-            }
-          }
-
-          // Remove accepted flower from suggestions
-          const newSuggestedFlowers = suggestions.filter((el) => el.id !== id);
-          const suggestedFlowersJson = JSON.stringify(
-            newSuggestedFlowers,
-            null,
-            2
-          );
-
-          fs.writeFile(
-            FLOWER_SUGGESTIONS_DATA_PATH,
-            suggestedFlowersJson,
-            'utf-8',
-            (err) => {
-              if (err) {
-                if (err.code === 'ENOENT') {
-                  console.error('ERROR! File not found: ', err);
-                  res.writeHead(404, { 'content-type': 'text/plain' });
-                  return res.end(
-                    'Error reading file, file could not be found.'
-                  );
-                } else {
-                  console.error(
-                    'ERROR! Error occured while reading file: ',
-                    err
-                  );
-                  res.writeHead(500, { 'content-type': 'text/plain' });
-                  return res.end('Error reading file, Internal Server Error.');
-                }
-              }
-
-              console.log('Suggested flower saved');
-              res.writeHead(204, { 'content-type': 'text/plain' });
-              res.end('Successfully stored flower suggestion');
-            }
-          );
-        });
-      });
-    });
+    console.log(
+      'Suggested flower approved and moved from suggestions to flowers!'
+    );
+    res.writeHead(204, { 'content-type': 'text/plain' });
+    res.end('Successfully moved flower suggestion to flowers');
   } else if (req.method === 'DELETE' && req.url.startsWith('/api/flowers')) {
     const id = url.parse(req.url, true).query.id;
     if (!id) {
@@ -422,74 +211,26 @@ const server = http.createServer((req, res) => {
       return res.end('No id parameter in url query');
     }
 
-    let flowers = [];
+    const flower = await supabaseService.getFlower(id);
+    if (!flower) {
+      console.error('ERROR! Could not find flower in DB with id: ', id);
+      res.writeHead(400, { 'content-type': 'text/plain' });
+      return res.end('Could not find flower with id: ', id);
+    }
 
-    // Get flowers
-    fs.readFile(FLOWER_DATA_PATH, 'utf-8', (err, data) => {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          console.error('ERROR! File not found: ', err);
-          res.writeHead(404, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, file could not be found.');
-        } else {
-          console.error('ERROR! Error occured while reading file: ', err);
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, Internal Server Error.');
-        }
-      }
+    if (!(await supabaseService.deleteImage(flower.image_url))) {
+      res.writeHead(500, { 'content-type': 'text/plain' });
+      return res.end('Could not delete image of flower id: '.id);
+    }
 
-      try {
-        flowers = JSON.parse(data);
-      } catch (error) {
-        console.error(
-          'ERROR! Error occured while parsing flowers data: ',
-          error
-        );
-        res.writeHead(500, { 'content-type': 'text/plain' });
-        return res.end('Error parsing flower data.');
-      }
+    if (!(await supabaseService.deleteFlower(id))) {
+      res.writeHead(500, { 'content-type': 'text/plain' });
+      return res.end('Could not delete flower record form DB');
+    }
 
-      // Find flower to delete and remove it
-      const flowerToDelete = flowers.find((el) => el.id === id);
-      if (!flowerToDelete) {
-        res.writeHead(400, { 'content-type': 'text/plain' });
-        return res.end(`No flower with id ${id} exists`);
-      }
-
-      const newFlowers = flowers.filter((el) => el.id !== id);
-      const newFlowersJson = JSON.stringify(newFlowers, null, 2);
-
-      // Delete image
-      fs.unlink(flowerToDelete.filepath, (err) => {
-        if (err) {
-          console.error(
-            'ERROR! Could not delete image of flower with id:',
-            flowerToDelete.id
-          );
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error deleting file.');
-        }
-
-        // Save flower data
-        fs.writeFile(FLOWER_DATA_PATH, newFlowersJson, 'utf-8', (err) => {
-          if (err) {
-            if (err.code === 'ENOENT') {
-              console.error('ERROR! File not found: ', err);
-              res.writeHead(404, { 'content-type': 'text/plain' });
-              return res.end('Error reading file, file could not be found.');
-            } else {
-              console.error('ERROR! Error occured while reading file: ', err);
-              res.writeHead(500, { 'content-type': 'text/plain' });
-              return res.end('Error reading file, Internal Server Error.');
-            }
-          }
-
-          console.log(`Flower ${id} deleted`);
-          res.writeHead(204, { 'content-type': 'text/plain' });
-          res.end('Successfully deleted flower ', id);
-        });
-      });
-    });
+    console.log(`Flower ${id} successfully deleted`);
+    res.writeHead(204, { 'content-type': 'text/plain' });
+    res.end('Successfully deleted flower ', id);
   } else if (
     req.method === 'DELETE' &&
     req.url.startsWith('/api/flower-suggestions')
@@ -501,82 +242,29 @@ const server = http.createServer((req, res) => {
       return res.end('No id parameter in url query');
     }
 
-    let suggestions = [];
+    const suggestion = await supabaseService.getSuggestion(id);
+    if (!suggestion) {
+      console.error('ERROR! Could not find suggestion in DB with id: ', id);
+      res.writeHead(400, { 'content-type': 'text/plain' });
+      return res.end('Could not find suggestion with id: ', id);
+    }
 
-    // Get flowers
-    fs.readFile(FLOWER_SUGGESTIONS_DATA_PATH, 'utf-8', (err, data) => {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          console.error('ERROR! File not found: ', err);
-          res.writeHead(404, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, file could not be found.');
-        } else {
-          console.error('ERROR! Error occured while reading file: ', err);
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error reading file, Internal Server Error.');
-        }
-      }
+    if (!(await supabaseService.deleteImage(suggestion.image_url))) {
+      res.writeHead(500, { 'content-type': 'text/plain' });
+      return res.end('Could not delete image of flower suggestion id: '.id);
+    }
 
-      try {
-        suggestions = JSON.parse(data);
-      } catch (error) {
-        console.error(
-          'ERROR! Error occured while parsing flower suggestions data: ',
-          error
-        );
-        res.writeHead(500, { 'content-type': 'text/plain' });
-        return res.end('Error parsing flower suggestions data.');
-      }
+    if (!(await supabaseService.deleteSuggestion(id))) {
+      res.writeHead(500, { 'content-type': 'text/plain' });
+      return res.end('Could not delete flower suggestion record form DB');
+    }
 
-      // Find flower to delete and remove it
-      const suggestionToDelete = suggestions.find((el) => el.id === id);
-      if (!suggestionToDelete) {
-        res.writeHead(400, { 'content-type': 'text/plain' });
-        return res.end(`No suggestion with id ${id} exists`);
-      }
-
-      const newSuggestions = suggestions.filter((el) => el.id !== id);
-      const newSuggestionsJson = JSON.stringify(newSuggestions, null, 2);
-
-      // Delete image
-      fs.unlink(suggestionToDelete.filepath, (err) => {
-        if (err) {
-          console.error(
-            'ERROR! Could not delete image of flower with id:',
-            suggestionToDelete.id
-          );
-          res.writeHead(500, { 'content-type': 'text/plain' });
-          return res.end('Error deleting file.');
-        }
-
-        // Save flower data
-        fs.writeFile(
-          FLOWER_SUGGESTIONS_DATA_PATH,
-          newSuggestionsJson,
-          'utf-8',
-          (err) => {
-            if (err) {
-              if (err.code === 'ENOENT') {
-                console.error('ERROR! File not found: ', err);
-                res.writeHead(404, { 'content-type': 'text/plain' });
-                return res.end('Error reading file, file could not be found.');
-              } else {
-                console.error('ERROR! Error occured while reading file: ', err);
-                res.writeHead(500, { 'content-type': 'text/plain' });
-                return res.end('Error reading file, Internal Server Error.');
-              }
-            }
-
-            console.log(`Flower suggestion ${id} deleted`);
-            res.writeHead(204, { 'content-type': 'text/plain' });
-            res.end('Successfully deleted flower suggestion ', id);
-          }
-        );
-      });
-    });
+    console.log(`Flower suggestion ${id} deleted`);
+    res.writeHead(204, { 'content-type': 'text/plain' });
+    res.end('Successfully deleted flower suggestion ', id);
   } else {
     res.writeHead(404, { 'content-type': 'text/plain' });
-    res.end(`No handler exists for ${req.method} ${req.url}`);
+    res.end(`No endpoint handler exists for ${req.method} ${req.url}`);
   }
 });
 
@@ -585,4 +273,3 @@ server.listen(PORT, '0.0.0.0', () => {
 });
 
 // TODO: Find a way to authorize or add another post event for client users
-// TODO: Make some way to find and/or get images
