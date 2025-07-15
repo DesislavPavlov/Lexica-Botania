@@ -14,6 +14,13 @@ let imageToWebpPromise = null;
 const server = http.createServer(async (req, res) => {
   console.log(req.url);
 
+  res.setHeader('Access-Control-Allow-Origin', '*'); // TODO: Change to domain name
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, OPTIONS'
+  );
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'GET' && req.url === '/api/flowers') {
     const flowers = await supabaseService.getFlowers();
     const flowersJson = JSON.stringify(flowers);
