@@ -13,6 +13,7 @@ let imageToWebpPromise = null;
 
 const server = http.createServer(async (req, res) => {
   console.log(req.url);
+  const token = req.headers.authorization?.split(' ')[1];
 
   res.setHeader('Access-Control-Allow-Origin', '*'); // TODO: Change to domain name
   res.setHeader(
@@ -22,7 +23,7 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'GET' && req.url === '/api/flowers') {
-    const flowers = await supabaseService.getFlowers();
+    const flowers = await supabaseService.getFlowers(token);
     const flowersJson = JSON.stringify(flowers);
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(flowersJson);
@@ -51,7 +52,7 @@ const server = http.createServer(async (req, res) => {
       const fileName = `${new Date().toJSON().slice(0, 10)}-${Date.now()}-${
         info.filename.split('.')[0]
       }.webp`;
-      imageToWebpPromise = supabaseService.saveImage(file, fileName);
+      imageToWebpPromise = supabaseService.saveImage(file, fileName, token);
     });
 
     // Busboy finish, save data to supabase
@@ -75,7 +76,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const newFlower = new Flower(nameBg, nameEng, nameLatin, filepath);
-      const savedId = await supabaseService.saveFlower(newFlower);
+      const savedId = await supabaseService.saveFlower(newFlower, token);
       if (!savedId) {
         console.error('ERROR! Unexpected error ocurred while saving flower!');
         res.writeHead(500, { 'content-type': 'text/plain' });
@@ -90,7 +91,7 @@ const server = http.createServer(async (req, res) => {
     // Pipe through busboy
     req.pipe(bb);
   } else if (req.method === 'GET' && req.url === '/api/flower-suggestions') {
-    const suggestions = await supabaseService.getSuggestions();
+    const suggestions = await supabaseService.getSuggestions(token);
     const suggestionsJson = JSON.stringify(suggestions);
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(suggestionsJson);
@@ -119,7 +120,7 @@ const server = http.createServer(async (req, res) => {
       const fileName = `${new Date().toJSON().slice(0, 10)}-${Date.now()}-${
         info.filename.split('.')[0]
       }.webp`;
-      imageToWebpPromise = supabaseService.saveImage(file, fileName);
+      imageToWebpPromise = supabaseService.saveImage(file, fileName, token);
     });
 
     // Finish
@@ -143,7 +144,10 @@ const server = http.createServer(async (req, res) => {
       }
 
       const newSuggestion = new Flower(nameBg, nameEng, nameLatin, filepath);
-      const savedId = await supabaseService.saveSuggestion(newSuggestion);
+      const savedId = await supabaseService.saveSuggestion(
+        newSuggestion,
+        token
+      );
       if (!savedId) {
         console.error(
           'ERROR! Unexpected error ocurred while saving suggestion!'
@@ -170,14 +174,14 @@ const server = http.createServer(async (req, res) => {
       return res.end('No id parameter in url query');
     }
 
-    const suggestion = await supabaseService.getSuggestion(id);
+    const suggestion = await supabaseService.getSuggestion(id, token);
     if (!suggestion) {
       console.error('ERROR! Could not find suggestion in DB with id: ', id);
       res.writeHead(400, { 'content-type': 'text/plain' });
       return res.end('Could not find suggestion with id: ', id);
     }
 
-    if (!(await supabaseService.deleteSuggestion(id))) {
+    if (!(await supabaseService.deleteSuggestion(id, token))) {
       res.writeHead(500, { 'content-type': 'text/plain' });
       return res.end('Could not delete flower suggestion record form DB');
     }
@@ -189,7 +193,7 @@ const server = http.createServer(async (req, res) => {
       suggestion.image_url
     );
 
-    const savedId = await supabaseService.saveFlower(newFlower);
+    const savedId = await supabaseService.saveFlower(newFlower, token);
     if (!savedId) {
       console.error(
         'ERROR! Unexpected error ocurred while approving suggested flower!'
@@ -211,19 +215,19 @@ const server = http.createServer(async (req, res) => {
       return res.end('No id parameter in url query');
     }
 
-    const flower = await supabaseService.getFlower(id);
+    const flower = await supabaseService.getFlower(id, token);
     if (!flower) {
       console.error('ERROR! Could not find flower in DB with id: ', id);
       res.writeHead(400, { 'content-type': 'text/plain' });
       return res.end('Could not find flower with id: ', id);
     }
 
-    if (!(await supabaseService.deleteImage(flower.image_url))) {
+    if (!(await supabaseService.deleteImage(flower.image_url, token))) {
       res.writeHead(500, { 'content-type': 'text/plain' });
       return res.end('Could not delete image of flower id: '.id);
     }
 
-    if (!(await supabaseService.deleteFlower(id))) {
+    if (!(await supabaseService.deleteFlower(id, token))) {
       res.writeHead(500, { 'content-type': 'text/plain' });
       return res.end('Could not delete flower record form DB');
     }
@@ -242,19 +246,19 @@ const server = http.createServer(async (req, res) => {
       return res.end('No id parameter in url query');
     }
 
-    const suggestion = await supabaseService.getSuggestion(id);
+    const suggestion = await supabaseService.getSuggestion(id, token);
     if (!suggestion) {
       console.error('ERROR! Could not find suggestion in DB with id: ', id);
       res.writeHead(400, { 'content-type': 'text/plain' });
       return res.end('Could not find suggestion with id: ', id);
     }
 
-    if (!(await supabaseService.deleteImage(suggestion.image_url))) {
+    if (!(await supabaseService.deleteImage(suggestion.image_url, token))) {
       res.writeHead(500, { 'content-type': 'text/plain' });
       return res.end('Could not delete image of flower suggestion id: '.id);
     }
 
-    if (!(await supabaseService.deleteSuggestion(id))) {
+    if (!(await supabaseService.deleteSuggestion(id, token))) {
       res.writeHead(500, { 'content-type': 'text/plain' });
       return res.end('Could not delete flower suggestion record form DB');
     }
