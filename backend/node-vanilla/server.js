@@ -203,7 +203,7 @@ const server = http.createServer(async (req, res) => {
         'ERROR! Unexpected error ocurred while approving suggested flower!'
       );
       res.writeHead(500, { 'content-type': 'text/plain' });
-      res.end('Could not approve flower suggestion, unexpected error ocurred');
+      return res.end('Could not approve flower suggestion, unexpected error ocurred');
     }
 
     console.log(
