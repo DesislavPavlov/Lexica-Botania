@@ -22,7 +22,11 @@ const server = http.createServer(async (req, res) => {
   );
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'GET' && req.url === '/api/flowers') {
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  } else if (req.method === 'GET' && req.url === '/api/flowers') {
     const flowers = await supabaseService.getFlowers(token);
     const flowersJson = JSON.stringify(flowers);
     res.writeHead(200, { 'content-type': 'application/json' });
