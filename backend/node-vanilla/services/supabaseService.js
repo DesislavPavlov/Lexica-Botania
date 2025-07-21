@@ -76,6 +76,8 @@ async function removeImageFromSupabase(fileUrl, token) {
 
 async function getFlowers(token) {
   const supabase = getSupabaseClient(token);
+  console.log(supabase);
+
   const { data, error } = await supabase.from('flowers').select();
 
   if (error) {

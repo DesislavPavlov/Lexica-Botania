@@ -14,8 +14,13 @@ let imageToWebpPromise = null;
 const server = http.createServer(async (req, res) => {
   console.log(req.url);
   const token = req.headers.authorization?.split(' ')[1];
-  const allowedOrigins = ['http://localhost:5173', 'https://your-production-site.com'];
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'https://your-production-site.com',
+  ];
   const origin = req.headers.origin;
+  console.log(req.headers);
+  console.log(token);
 
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
