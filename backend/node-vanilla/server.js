@@ -19,8 +19,6 @@ const server = http.createServer(async (req, res) => {
     'https://your-production-site.com',
   ];
   const origin = req.headers.origin;
-  console.log(req.headers);
-  console.log(token);
 
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);

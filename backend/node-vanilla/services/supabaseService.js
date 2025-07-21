@@ -4,16 +4,24 @@ const { createClient } = require('@supabase/supabase-js');
 const URL = process.env.SUPABASE_URL;
 const ANON_KEY = process.env.SUPABASE_SERVICE_ANON_KEY;
 
-function getSupabaseClient(token = null) {
-  return createClient(URL, ANON_KEY, {
+async function getSupabaseClient(token = null) {
+  const supabase = createClient(URL, ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
     global: {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     },
   });
+
+  await supabase.auth.setSession({ access_token: token, refresh_token: '' });
+
+  return supabase;
 }
 
-function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
-  const supabase = getSupabaseClient(token);
+async function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
+  const supabase = await getSupabaseClient(token);
   const chunks = [];
   const transformer = sharp().webp();
 
@@ -44,7 +52,7 @@ function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
 }
 
 async function removeImageFromSupabase(fileUrl, token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   try {
     const urlSegments = fileUrl.split('/flowers/');
     if (urlSegments.length !== 2) {
@@ -75,9 +83,7 @@ async function removeImageFromSupabase(fileUrl, token) {
 }
 
 async function getFlowers(token) {
-  const supabase = getSupabaseClient(token);
-  console.log(supabase);
-
+  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase.from('flowers').select();
 
   if (error) {
@@ -89,7 +95,7 @@ async function getFlowers(token) {
 }
 
 async function getSuggestions(token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase.from('flower_suggestions').select();
 
   if (error) {
@@ -101,7 +107,7 @@ async function getSuggestions(token) {
 }
 
 async function getFlower(id, token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase.from('flowers').select().eq('id', id);
 
   if (error) {
@@ -114,7 +120,7 @@ async function getFlower(id, token) {
 }
 
 async function getSuggestion(id, token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from('flower_suggestions')
     .select()
@@ -130,7 +136,7 @@ async function getSuggestion(id, token) {
 }
 
 async function insertFlower(flower, token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from('flowers')
     .insert([
@@ -152,7 +158,7 @@ async function insertFlower(flower, token) {
 }
 
 async function insertSuggestion(flower, token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   const { data, error } = await supabase
     .from('flower_suggestions')
     .insert([
@@ -174,7 +180,7 @@ async function insertSuggestion(flower, token) {
 }
 
 async function deleteFlower(id, token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   try {
     await supabase.from('flowers').delete().eq('id', id);
     return true;
@@ -185,7 +191,7 @@ async function deleteFlower(id, token) {
 }
 
 async function deleteSuggestion(id, token) {
-  const supabase = getSupabaseClient(token);
+  const supabase = await getSupabaseClient(token);
   try {
     await supabase.from('flower_suggestions').delete().eq('id', id);
     return true;
