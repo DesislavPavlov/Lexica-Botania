@@ -14,7 +14,7 @@ let imageToWebpPromise = null;
 const server = http.createServer(async (req, res) => {
   console.log(req.url);
   const token = req.headers.authorization?.split(' ')[1];
-  const allowedOrigins = ['localhost:5173', 'INSERT DEPLOYED DOMAIN HERE'];
+  const allowedOrigins = ['http://localhost:5173', 'https://your-production-site.com'];
   const origin = req.headers.origin;
 
   if (allowedOrigins.includes(origin)) {
