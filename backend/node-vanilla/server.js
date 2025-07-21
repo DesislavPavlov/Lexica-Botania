@@ -14,8 +14,12 @@ let imageToWebpPromise = null;
 const server = http.createServer(async (req, res) => {
   console.log(req.url);
   const token = req.headers.authorization?.split(' ')[1];
+  const allowedOrigins = ['localhost:5173', 'INSERT DEPLOYED DOMAIN HERE'];
+  const origin = req.headers.origin;
 
-  res.setHeader('Access-Control-Allow-Origin', '*'); // TODO: Change to domain name
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader(
     'Access-Control-Allow-Methods',
     'GET, POST, PUT, DELETE, OPTIONS'
@@ -203,7 +207,9 @@ const server = http.createServer(async (req, res) => {
         'ERROR! Unexpected error ocurred while approving suggested flower!'
       );
       res.writeHead(500, { 'content-type': 'text/plain' });
-      return res.end('Could not approve flower suggestion, unexpected error ocurred');
+      return res.end(
+        'Could not approve flower suggestion, unexpected error ocurred'
+      );
     }
 
     console.log(
@@ -279,5 +285,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server listening...');
 });
-
-// TODO: Find a way to authorize or add another post event for client users
