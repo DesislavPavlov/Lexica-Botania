@@ -5,7 +5,7 @@ const URL = process.env.SUPABASE_URL;
 const ANON_KEY = process.env.SUPABASE_SERVICE_ANON_KEY;
 
 async function getSupabaseClient(token = null) {
-  const supabase = createClient(URL, ANON_KEY, {
+  return createClient(URL, ANON_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -14,10 +14,6 @@ async function getSupabaseClient(token = null) {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     },
   });
-
-  await supabase.auth.setSession({ access_token: token, refresh_token: '' });
-
-  return supabase;
 }
 
 async function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
