@@ -91,7 +91,7 @@ const server = http.createServer(async (req, res) => {
       if (!savedId) {
         console.error('ERROR! Unexpected error ocurred while saving flower!');
         res.writeHead(500, { 'content-type': 'text/plain' });
-        res.end('Could not save flower, unexpected error ocurred');
+        return res.end('Could not save flower, unexpected error ocurred');
       }
 
       console.log('New flower successfully saved!');
@@ -164,7 +164,9 @@ const server = http.createServer(async (req, res) => {
           'ERROR! Unexpected error ocurred while saving suggestion!'
         );
         res.writeHead(500, { 'content-type': 'text/plain' });
-        res.end('Could not save flower suggestion, unexpected error ocurred');
+        return res.end(
+          'Could not save flower suggestion, unexpected error ocurred'
+        );
       }
 
       console.log('Flower suggestion successfully saved!');
