@@ -35,6 +35,7 @@ async function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
           });
 
         if (error) {
+          console.log('ERROR! Supabase could not store image! ', error);
           return reject(error);
         }
 
@@ -83,7 +84,7 @@ async function getFlowers(token) {
   const { data, error } = await supabase.from('flowers').select();
 
   if (error) {
-    console.error('ERROR! Could not get flowers!');
+    console.error('ERROR! Could not get flowers! ', error);
     return null;
   }
 
@@ -95,7 +96,7 @@ async function getSuggestions(token) {
   const { data, error } = await supabase.from('flower_suggestions').select();
 
   if (error) {
-    console.error('ERROR! Could not get flower suggestions!');
+    console.error('ERROR! Could not get flower suggestions! ', error);
     return null;
   }
 
@@ -107,7 +108,7 @@ async function getFlower(id, token) {
   const { data, error } = await supabase.from('flowers').select().eq('id', id);
 
   if (error) {
-    console.error('ERROR! Could not get flower with id: ', id);
+    console.error('ERROR! Could not get flower with id: ', id, error);
     return null;
   }
 
@@ -123,7 +124,11 @@ async function getSuggestion(id, token) {
     .eq('id', id);
 
   if (error) {
-    console.error('ERROR! Could not get flower suggestion with id: ', id);
+    console.error(
+      'ERROR! Could not get flower suggestion with id: ',
+      id,
+      error
+    );
     return null;
   }
 
@@ -181,7 +186,7 @@ async function deleteFlower(id, token) {
     await supabase.from('flowers').delete().eq('id', id);
     return true;
   } catch (error) {
-    console.error('ERROR! Could not delete flower with id: ', id);
+    console.error('ERROR! Could not delete flower with id: ', id, error);
     return false;
   }
 }
@@ -192,7 +197,11 @@ async function deleteSuggestion(id, token) {
     await supabase.from('flower_suggestions').delete().eq('id', id);
     return true;
   } catch (error) {
-    console.error('ERROR! Could not delete flower suggestion with id: ', id);
+    console.error(
+      'ERROR! Could not delete flower suggestion with id: ',
+      id,
+      error
+    );
     return false;
   }
 }
