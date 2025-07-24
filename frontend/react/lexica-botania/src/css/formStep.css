@@ -1,0 +1,63 @@
+.step-header {
+    font-size: max(6vw, 3rem);
+    padding: 0 0.5em;
+    text-align: center;
+    color: #c0edad;
+    text-shadow: 3px 3px #4f6248;
+}
+
+.step-message {
+    font-size: max(3vw, 1.5rem);
+    text-align: center;
+    padding: 0 1em;
+}
+
+.form-input-wrapper {
+    margin: 0 auto;
+    width: min(40em, 90vw);
+    padding: 10vh 5vw;
+    display: flex;
+    flex-direction: column;
+    background-color: #c0edad30;
+    backdrop-filter: blur(5em);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 2.2em;
+    mask-image: linear-gradient(transparent 10%, black 30%, black 70%, transparent 90%);
+}
+
+.form-input-wrapper label{
+    font-size: max(3vw, 1.5rem);
+    color: rgb(233, 233, 233);
+    padding-bottom: 0.5em;
+}
+
+.form-input-wrapper input {
+    font-family: Magic-School;
+    font-size: max(4vw, 2rem);
+    padding: 0 0.3em;
+    background-color: transparent;
+    border: 0.5px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 0.1em;
+    transition: box-shadow 0.5s ease, border 0.3s ease;
+}
+
+.form-input-wrapper input[type='text']:hover {
+    border: 0.5px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 5px #c0edad;
+}
+
+.form-input-wrapper input[type='text']:focus {
+    outline: none;
+    box-shadow: 5px 5px 5px #c0edad;
+}
+
+.image-preview-wrapper {
+  text-align: center;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 250px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}

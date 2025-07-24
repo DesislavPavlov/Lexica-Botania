@@ -1,0 +1,24 @@
+.back-button-wrapper {
+    position: fixed;
+    right: 5em;
+    bottom: 2em;
+    max-width: 10vw;
+    font-size: 0.3rem !important;
+    z-index: 10;
+}
+
+.back-button-wrapper .link-button {
+    color: #c0edad !important; 
+}
+
+.back-button-wrapper .link-button:hover {
+    color: #4f6248 !important; 
+    -webkit-text-stroke: 0.5px #c0edad;
+}
+
+@media screen and (max-width: 400px), (max-height: 400px) {
+    .back-button-wrapper {
+        top: 1em;
+        left: 2em;
+    }
+}

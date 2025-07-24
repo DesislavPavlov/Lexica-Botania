@@ -1,0 +1,64 @@
+.link-container {
+    width: fit-content;
+    height: fit-content;
+    transition: height 0.5s ease, filter 0.3s, transform 0.3s;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: perspective(1000px);
+}
+
+.link-button {
+    display: block;
+    font-size: clamp(5em, 10vw, 10em);
+    text-decoration: none;
+    transition: filter 0.5s ease, transform 0.5s ease, opacity 0.5s ease, -webkit-text-stroke 0.5s ease;
+    text-align: center;
+}
+
+.hidden-text {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.6s ease;
+    overflow-y: hidden;
+    text-align: center;
+    font-size: max(5vw, 2rem);
+    pointer-events: none;
+}
+
+.link-button:hover, .link-button:focus {
+    filter: brightness(1.1) drop-shadow(5px 5px 5px rgb(6, 63, 1));
+    transform: scale(1.1) translateZ(100px);
+}
+
+.link-container:hover + * + *, .link-container:has(+ * + .link-container:hover) {
+    filter: brightness(0.8);
+    transform: scale(0.85);
+}
+
+.link-button:hover + .hidden-text, .link-button:focus + .hidden-text {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-30%);
+    animation: colorize 0.35s 0.3s forwards ease;
+}
+
+
+@keyframes colorize {
+    0% {
+        color: inherit;
+    }
+
+    100% {
+        color: #c0edad;
+    }
+}
+
+@media screen and (pointer: coarse) {
+    .hidden-text {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-30%);
+        animation: colorize 0.35s 0.3s forwards ease;
+    }
+}
