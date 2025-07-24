@@ -62,19 +62,19 @@ async function removeImageFromSupabase(fileUrl, token) {
 
     const fileName = urlSegments[1];
 
-    const { data, err } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from('flowers')
       .remove([fileName]);
 
-    if (err) {
+    if (error) {
       console.error('ERROR! Failed to delete image: ', err.message);
       return false;
     }
 
     console.log('Image successfully removed!');
     return true;
-  } catch (error) {
-    console.error('ERROR! Unexpected error during file deletion: ', error);
+  } catch (err) {
+    console.error('ERROR! Unexpected error during file deletion: ', err);
     return false;
   }
 }
