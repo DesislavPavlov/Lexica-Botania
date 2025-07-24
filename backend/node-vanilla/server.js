@@ -16,7 +16,7 @@ const server = http.createServer(async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   const allowedOrigins = [
     'http://localhost:5173',
-    'https://your-production-site.com',
+    'https://lexica-botania.vercel.app',
   ];
   const origin = req.headers.origin;
 

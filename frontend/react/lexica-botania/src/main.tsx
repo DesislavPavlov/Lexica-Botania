@@ -14,35 +14,35 @@ import NotFoundPage from './pages/NotFoundPage';
 const router = createBrowserRouter([
   {
     path: '/',
-    Component: HomePage,
+    element: <HomePage />,
   },
   {
     path: '/gallery',
-    Component: GalleryPage,
+    element: <GalleryPage />,
   },
   {
     path: '/suggestion',
-    Component: SuggestionPage,
+    element: <SuggestionPage />,
   },
   {
     path: '/suggestion-result',
-    Component: SuggestResultPage,
+    element: <SuggestResultPage />,
   },
   {
     path: '/admin',
-    Component: AdminLoginPage,
+    element: <AdminLoginPage />,
   },
   {
     path: '/admin-failed',
-    Component: FailedAdminLoginPage,
+    element: <FailedAdminLoginPage />,
   },
   {
     path: '/admin-logout',
-    Component: AdminLogoutPage,
+    element: <AdminLogoutPage />,
   },
   {
     path: '*',
-    Component: NotFoundPage,
+    element: <NotFoundPage />,
   },
 ]);
 
