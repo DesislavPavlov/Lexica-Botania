@@ -1,0 +1,107 @@
+.flower-card {
+  background-color: #c0edad;
+  border-radius: 1rem;
+  overflow: hidden;
+  max-width: 400px;
+  margin: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.15s ease;
+}
+
+.flower-card.suggestion {
+  background-color: #4f6248;
+}
+
+.flower-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 3px 3px 3px #4f6248;
+}
+
+.flower-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.flower-names {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  flex-wrap: wrap;
+}
+
+.name-latin {
+  font-weight: bold;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  flex: 1 1 55%;
+  color: #2e2e2e; 
+}
+
+.suggestion .name-latin {
+  color: #efefef;
+}
+
+.name-eng,
+.name-bg {  
+  font-size: 0.95rem;
+  line-height: 1.1;
+  color: #4d4d4d;
+  flex: 1 1 100%;
+  text-align: right;
+}
+
+.suggestion .name-eng, .suggestion .name-bg {
+  color: #cccccc;
+}
+
+.name-eng {
+  font-weight: 500;
+}
+
+.name-bg {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.admin-controls {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #c0edadd0;
+  margin-top: 0.3em;
+}
+
+.admin-controls button {
+  font-size: 1.5rem;
+  flex-grow: 1;
+  background-color: #4f6248;
+  border: none;
+  color: #efefef;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.admin-controls button:hover {
+  background-color: #c0edad;
+  color: black;
+  cursor: pointer;
+}
+
+/* Responsive behavior */
+@media (max-width: 500px) {
+  .flower-names {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
+  .name-latin,
+  .name-eng,
+  .name-bg {
+    text-align: left;
+  }
+}

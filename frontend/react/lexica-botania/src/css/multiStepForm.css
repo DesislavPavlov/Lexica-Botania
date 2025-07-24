@@ -1,0 +1,80 @@
+form {
+    padding-bottom: 0.5em;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;  
+    transition: opacity 0.3s, transform 0.3s; 
+}
+
+.form-button-wrapper {
+    width: min(40em, 90vw);
+    display: flex;
+    justify-content: space-around;
+}
+
+.form-button {
+    position: relative;
+    font-size: max(7vw, 2rem);
+    border: none;
+    height: 2.94vh;
+    transition: background-color 0.3s ease, opacity 0.3s;
+}
+
+.form-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    transition: border-color 0.3s ease;
+}
+
+.next {
+    width: 35%;
+    background-color: #c0edad;
+    border-top-left-radius: 0.05em;
+    border-bottom-left-radius: 0.05em;
+}
+
+.prev {
+    width: 55%;
+    background-color: #4f6248;
+    border-top-right-radius: 0.05em;
+    border-bottom-right-radius: 0.05em;
+}
+
+.next::after {
+    right: -2.8vh;
+    border-width: 1.5vh;
+    border-color: transparent transparent transparent #c0edad;
+}
+
+.prev::after {
+    left: -2.8vh;
+    border-width: 1.5vh;
+    border-color: transparent #4f6248 transparent transparent;
+}
+
+.form-button:hover, .form-button:focus {
+    background-color: #e5c062;
+    cursor: pointer;
+    outline: none;
+}
+
+.next:hover::after, .next:focus::after {
+   border-left-color: #e5c062;
+}
+
+.prev:hover::after, .prev:focus::after {
+   border-right-color: #e5c062;
+}
+
+.form-button:disabled {
+    opacity: 0.1;
+    pointer-events: none;
+}
