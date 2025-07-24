@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router';
 import MultiStepForm from '../components/MultiStepForm';
 import { getIsAdmin } from '../services/supabaseService';
 import { useEffect, useState } from 'react';
-import { renderToString } from 'react-dom/server';
 import Loading from '../components/Loading';
 
 const suggestionPage = () => {

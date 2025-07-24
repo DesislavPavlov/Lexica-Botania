@@ -6,7 +6,6 @@ import {
   isValidElement,
   useState,
   type PropsWithChildren,
-  type ReactElement,
 } from 'react';
 
 interface FormStepProps {
