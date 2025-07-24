@@ -18,6 +18,7 @@ async function getSupabaseClient(token = null) {
 
 async function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
   const supabase = await getSupabaseClient(token);
+  const sanitizedName = sanitizeFileName(fileName);
   const chunks = [];
   const transformer = sharp().webp();
 
@@ -29,7 +30,7 @@ async function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
         const buffer = Buffer.concat(chunks);
         const { data, error } = await supabase.storage
           .from('flowers')
-          .upload(fileName, buffer, {
+          .upload(sanitizedName, buffer, {
             contentType: 'image/webp',
             upsert: true,
           });
@@ -41,11 +42,29 @@ async function saveImageToSupabaseAsWebp(fileStream, fileName, token) {
 
         const { data: publicUrlData } = supabase.storage
           .from('flowers')
-          .getPublicUrl(fileName);
+          .getPublicUrl(sanitizedName);
         resolve(publicUrlData.publicUrl);
       })
       .on('error', reject);
   });
+
+  function sanitizeFileName(name) {
+    // 1. Normalize to NFKD
+    let sanitized = name.normalize('NFKD');
+
+    // 2. Remove accents & non-ASCII
+    sanitized = sanitized.replace(/[\u0300-\u036f]/g, ''); // remove accents
+    sanitized = sanitized.replace(/[^\x00-\x7F]/g, ''); // remove non-ASCII (Cyrillic, etc.)
+
+    // 3. Replace intervals with underscores
+    sanitized = sanitized.replace(/\s+/g, '_');
+
+    // 4. Remove special characters
+    sanitized = sanitized.replace(/[^a-zA-Z0-9._-]/g, '');
+
+    // 5. Lowercase
+    return sanitized.toLowerCase();
+  }
 }
 
 async function removeImageFromSupabase(fileUrl, token) {
@@ -61,13 +80,14 @@ async function removeImageFromSupabase(fileUrl, token) {
     }
 
     const fileName = urlSegments[1];
+    console.log(fileName);
 
     const { data, error } = await supabase.storage
       .from('flowers')
       .remove([fileName]);
 
     if (error) {
-      console.error('ERROR! Failed to delete image: ', err.message);
+      console.error('ERROR! Failed to delete image: ', error.message);
       return false;
     }
 
