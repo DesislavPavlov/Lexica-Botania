@@ -1,13 +1,14 @@
 # 🌸 Lexica Botania
-
-_A multilingual flower catalog with guest suggestions and admin moderation._
+> *"Gardens are not made by singing 'Oh, how beautiful,' and sitting in the shade."*  
+> — **Rudyard Kipling**  
 
 ---
 
 ## 🚀 Live Demo
 
-- **Frontend (React + Vercel):** [Visit Here](<frontend-link>)
-- **Backend API (Node.js + Render):** [Visit Here](<backend-link>)
+**Lexica Botania** is online!  
+![DemoHome](readme_resources/DemoHome.gif)  
+**Frontend (React + Vercel):** [Visit Here](https://lexica-botania.vercel.app/)
 
 ---
 
@@ -54,11 +55,14 @@ _A multilingual flower catalog with guest suggestions and admin moderation._
 
 ## 🎥 Showcase
 
-(Add screenshots or a short GIF/video demo here)  
 - Example: Home Page  
+![DemoHome](readme_resources/DemoHome.gif)  
 - Example: Gallery View  
+![DemoGallery](readme_resources/DemoGallery.gif)  
 - Example: Suggestion Flow  
-- Example: Admin Approval Flow
+![DemoSuggestion](readme_resources/DemoSuggestion.gif)  
+- Example: Admin Approval Flow  
+![DemoAdmin](readme_resources/DemoAdmin.gif)  
 
 ---
 
@@ -93,11 +97,12 @@ This project is licensed under the **MIT License** — free to use, modify, and 
 
 ---
 
-## 📬 Contact
+## 📩 Contact
 
-- **Author:** Desislav Pavlov  
-- **GitHub:** [DesislavPavlov](https://github.com/DesislavPavlov)  
-- **Email:** makotashako@gmail.com
+- 💡 **Developer:** Desislav Pavlov  
+- 📧 **Email:** makotashako@gmail.com
+- 🐙 **GitHub:** [DesislavPavlov](https://github.com/DesislavPavlov)  
+- 🔗 **LinkedIn:** [Desislav Pavlov](https://www.linkedin.com/in/developer-d-pavlov/),
 
 ---
 
