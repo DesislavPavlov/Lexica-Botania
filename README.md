@@ -2,13 +2,15 @@
 > *"Gardens are not made by singing 'Oh, how beautiful,' and sitting in the shade."*  
 > — **Rudyard Kipling**  
 
+***This project is not affiliated with or endorsed by the Botania Minecraft mod.***
+
 ---
 
 ## 🚀 Live Demo
 
-**Lexica Botania** is online!  
+**Lexica Botania** is [online](https://lexica-botania.vercel.app/)!  
+
 ![DemoHome](readme_resources/DemoHome.gif)  
-**Frontend (React + Vercel):** [Visit Here](https://lexica-botania.vercel.app/)
 
 ---
 
@@ -56,12 +58,19 @@
 ## 🎥 Showcase
 
 - Example: Home Page  
+
 ![DemoHome](readme_resources/DemoHome.gif)  
+
 - Example: Gallery View  
+
 ![DemoGallery](readme_resources/DemoGallery.gif)  
+
 - Example: Suggestion Flow  
-![DemoSuggestion](readme_resources/DemoSuggestion.gif)  
+
+![DemoSuggestion](readme_resources/DemoSuggest.gif)
+
 - Example: Admin Approval Flow  
+
 ![DemoAdmin](readme_resources/DemoAdmin.gif)  
 
 ---
@@ -93,7 +102,10 @@
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — free to use, modify, and distribute with attribution.
+This project is licensed under the **MIT License** — free to use, modify, and distribute with attribution.  
+***Note: The name "Lexica Botania" and icon are inspired by the Botania Minecraft mod. 
+They are not licensed under MIT and belong to their respective creators.***
+
 
 ---
 
